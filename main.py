@@ -118,16 +118,11 @@ class MyPlugin(Star):
                         api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image=https://api.suyanw.cn/api/comic.php&size=85&text={text_encoded}&color=true"
                         logger.info(f"将文本转换为图片：{text_content[:50]}...")
                         
-                        # 清空原消息链
-                        result.chain.clear()
-                        # 尝试使用正确的参数创建Image对象
-                        try:
-                            from astrbot.api.message_components import Image
-                            # 尝试使用file参数，传递API URL作为值
-                            result.chain.append(Image(file=api_url))
-                        except Exception as e:
-                            logger.error(f"添加图片消息失败：{e}")
-                            # 出错时保持原消息不变
+                        # 直接使用event.image_result创建图片消息
+                        # 注意：这里我们需要使用event.image_result的返回值
+                        image_result = event.image_result(api_url)
+                        # 设置新的结果
+                        event.set_result(image_result)
             except Exception as e:
                 logger.error(f"装饰消息时出错：{e}")
 
