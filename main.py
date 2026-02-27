@@ -54,6 +54,7 @@ class MyPlugin(Star):
                 yield result
 
     # 注册指令的装饰器。指令名为 tp。注册成功后，发送 `/tp` 就会触发这个指令，切换图片模式
+    @filter.permission_type(filter.PermissionType.ADMIN)
     @filter.command("tp")
     async def toggle_image_mode(self, event: AstrMessageEvent):
         """切换图片模式，开启后bot返回的内容全部使用图片形式返回"""
