@@ -1,4 +1,4 @@
-# plugin_upload_text_to_Image
+# astrbot_plugin_text_to_Image
  二次元风格-文本转图片
 
 <div align="center">
@@ -6,8 +6,8 @@
   <p>AstrBot 插件，二次元风格文转图，使bot以图片形式返回内容，将文本以图片的形式发送。基于外部API的二次元风格文转图，提供更美观的文本展示效果。</p>
   
   <div>
-    <img src="https://img.shields.io/github/stars/tniany/plugin_upload_text_to_Image?style=flat-square" alt="GitHub Stars" />
-    <img src="https://img.shields.io/github/license/tniany/plugin_upload_text_to_Image?style=flat-square" alt="License" />
+    <img src="https://img.shields.io/github/stars/tniany/astrbot_plugin_text_to_Image?style=flat-square" alt="GitHub Stars" />
+    <img src="https://img.shields.io/github/license/tniany/astrbot_plugin_text_to_Image?style=flat-square" alt="License" />
     <img src="https://img.shields.io/badge/python-3.7%2B-blue?style=flat-square" alt="Python Version" />
   </div>
 </div>
@@ -28,7 +28,7 @@
 ## 技术实现
 
 - 使用 `aiohttp` 库进行异步HTTP请求
-- 调用外部API生成图片：`https://api.suyanw.cn/api/zdytwhc.php`
+- 调用外部API生成图片
 - 支持文本URL编码和完整的错误处理机制
 - 兼容多种聊天平台
 
@@ -40,7 +40,7 @@
 ### 方法二：手动安装
 1. 克隆或下载本插件到 AstrBot 的插件目录
    ```bash
-   git clone https://github.com/tniany/plugin_upload_text_to_Image.git
+   git clone https://github.com/tniany/astrbot_plugin_text_to_Image.git
    ```
 
 2. 安装依赖：
@@ -103,4 +103,4 @@ v1.0.6
 
 ## 仓库地址
 
-[GitHub](https://github.com/tniany/plugin_upload_text_to_Image)
+[GitHub](https://github.com/tniany/astrbot_plugin_text_to_Image)
