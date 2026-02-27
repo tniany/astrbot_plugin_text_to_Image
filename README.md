@@ -1,8 +1,7 @@
 # plugin_upload_text_to_Image 插件
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/0369dd64-e7a2-494d-943a-14eb9e0e83f7" alt="效果展示" width="300" />
-  
+  <img src="https://github.com/user-attachments/assets/4d1de02f-7347-4b2f-b81d-c2d3cfd84b87" alt="logo" width="300" />
   <p>AstrBot 插件，使bot以图片形式返回内容，将文本以图片的形式发送。基于外部API的二次元风格文转图，提供更美观的文本展示效果。</p>
   
   <div>
@@ -36,8 +35,8 @@
 - **二次元风格**：基于外部API生成的图片具有美观的二次元风格
 
 ## 效果展示
-![22b67333e601142991cc8a557a83ffc0_720](https://github.com/user-attachments/assets/0369dd64-e7a2-494d-943a-14eb9e0e83f7)
 
+  <img src="https://github.com/user-attachments/assets/0369dd64-e7a2-494d-943a-14eb9e0e83f7" alt="效果展示" width="300" />
 
 
 ## 技术实现
