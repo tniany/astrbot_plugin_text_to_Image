@@ -15,11 +15,15 @@ class MyPlugin(Star):
         self.data_file = self._get_data_file()
         self._load_data()
         
-        # 从配置中读取image_url（如果配置存在且未从持久化数据加载）
+        # 从配置中读取配置项（如果配置存在且未从持久化数据加载）
         try:
-            if config and "image_url" in config and not hasattr(self, 'image_url'):
-                self.image_url = config["image_url"]
-                logger.info(f"从配置中读取图片模板地址：{self.image_url}")
+            if config:
+                if "image_url" in config and not hasattr(self, 'image_url'):
+                    self.image_url = config["image_url"]
+                    logger.info(f"从配置中读取图片模板地址：{self.image_url}")
+                if "color_enabled" in config and not hasattr(self, 'color_enabled'):
+                    self.color_enabled = config["color_enabled"]
+                    logger.info(f"从配置中读取颜色开关状态：{self.color_enabled}")
         except Exception as e:
             logger.error(f"读取配置失败：{e}")
         
@@ -28,8 +32,10 @@ class MyPlugin(Star):
             self.image_mode = False  # 默认为关闭图片模式
         if not hasattr(self, 'image_url'):
             self.image_url = "https://api.suyanw.cn/api/comic.php"  # 默认值
+        if not hasattr(self, 'color_enabled'):
+            self.color_enabled = True  # 默认为开启颜色
         
-        logger.info(f"文本转图片插件初始化，当前图片模式：{self.image_mode}")
+        logger.info(f"文本转图片插件初始化，当前图片模式：{self.image_mode}，颜色状态：{self.color_enabled}")
         logger.info(f"当前图片模板地址：{self.image_url}")
     
     def _get_data_file(self):
@@ -51,6 +57,8 @@ class MyPlugin(Star):
                         self.image_mode = data['image_mode']
                     if 'image_url' in data:
                         self.image_url = data['image_url']
+                    if 'color_enabled' in data:
+                        self.color_enabled = data['color_enabled']
                 logger.info("已从持久化数据加载配置")
         except Exception as e:
             logger.error(f"加载持久化数据失败：{e}")
@@ -65,11 +73,12 @@ class MyPlugin(Star):
             # 保存数据
             data = {
                 'image_mode': self.image_mode,
-                'image_url': self.image_url
+                'image_url': self.image_url,
+                'color_enabled': self.color_enabled
             }
             with open(self.data_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-            logger.info("配置已持久化保存")
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            logger.info("已保存配置到持久化数据")
         except Exception as e:
             logger.error(f"保存持久化数据失败：{e}")
 
@@ -103,7 +112,7 @@ class MyPlugin(Star):
                 'image': self.image_url,
                 'size': 85,
                 'text': user_text,
-                'color': 'true'
+                'color': 'true' if self.color_enabled else 'false'
             }
             query_string = urllib.parse.urlencode(params)
             api_url = f"https://api.suyanw.cn/api/zdytwhc.php?{query_string}"
@@ -154,6 +163,20 @@ class MyPlugin(Star):
             async for result in self.send_message(event, f"设置图片模板地址时出错：{str(e)}"):
                 yield result
 
+    # 注册指令的装饰器。指令名为 cf。注册成功后，发送 `/cf` 就会触发这个指令，切换颜色状态
+    @filter.permission_type(filter.PermissionType.ADMIN)
+    @filter.command("cf")
+    async def toggle_color(self, event: AstrMessageEvent):
+        """切换颜色状态"""
+        self.color_enabled = not self.color_enabled
+        status = "开启" if self.color_enabled else "关闭"
+        logger.info(f"颜色状态已{status}，当前状态：{self.color_enabled}")
+        # 保存数据
+        self._save_data()
+        # 发送状态消息
+        async for result in self.send_message(event, f"颜色状态已{status}。\n{status}后，生成的图片将{'包含' if self.color_enabled else '不包含'}颜色。"):
+            yield result
+
 
 
     async def send_message(self, event: AstrMessageEvent, text: str):
@@ -166,7 +189,7 @@ class MyPlugin(Star):
                     'image': self.image_url,
                     'size': 85,
                     'text': text,
-                    'color': 'true'
+                    'color': 'true' if self.color_enabled else 'false'
                 }
                 query_string = urllib.parse.urlencode(params)
                 api_url = f"https://api.suyanw.cn/api/zdytwhc.php?{query_string}"
@@ -211,7 +234,7 @@ class MyPlugin(Star):
                             'image': self.image_url,
                             'size': 85,
                             'text': text_content,
-                            'color': 'true'
+                            'color': 'true' if self.color_enabled else 'false'
                         }
                         query_string = urllib.parse.urlencode(params)
                         api_url = f"https://api.suyanw.cn/api/zdytwhc.php?{query_string}"
