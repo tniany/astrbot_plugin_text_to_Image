@@ -1,14 +1,59 @@
-# astrbot-plugin-helloworld
+# upload_text_to_image 插件
 
-AstrBot 插件模板 / A template plugin for AstrBot plugin feature
+AstrBot 插件，使bot以图片形式返回内容，将文本以图片的形式发送。
 
-> [!NOTE]
-> This repo is just a template of [AstrBot](https://github.com/AstrBotDevs/AstrBot) Plugin.
-> 
-> [AstrBot](https://github.com/AstrBotDevs/AstrBot) is an agentic assistant for both personal and group conversations. It can be deployed across dozens of mainstream instant messaging platforms, including QQ, Telegram, Feishu, DingTalk, Slack, LINE, Discord, Matrix, etc. In addition, it provides a reliable and extensible conversational AI infrastructure for individuals, developers, and teams. Whether you need a personal AI companion, an intelligent customer support agent, an automation assistant, or an enterprise knowledge base, AstrBot enables you to quickly build AI applications directly within your existing messaging workflows.
+## 功能介绍
 
-# Supports
+- **单次文本转图片**：使用 `/p 文本` 指令将指定文本转换为图片并发送
+- **图片模式切换**：使用 `/tp` 指令切换图片模式，开启后所有返回内容都会转换为图片
+- **自动错误处理**：当图片生成失败时，会自动回退到发送纯文本
 
-- [AstrBot Repo](https://github.com/AstrBotDevs/AstrBot)
-- [AstrBot Plugin Development Docs (Chinese)](https://docs.astrbot.app/dev/star/plugin-new.html)
-- [AstrBot Plugin Development Docs (English)](https://docs.astrbot.app/en/dev/star/plugin-new.html)
+## 技术实现
+
+- 使用 `aiohttp` 库进行异步HTTP请求
+- 调用外部API生成图片：`https://api.suyanw.cn/api/zdytwhc.php`
+- 支持文本URL编码和完整的错误处理机制
+
+## 安装方法
+
+1. 克隆或下载本插件到 AstrBot 的插件目录
+2. 安装依赖：
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. 重启 AstrBot 即可使用
+
+## 使用示例
+
+### 单次文本转图片
+
+```
+/p 你好，这是一条测试消息
+```
+
+### 切换图片模式
+
+```
+/tp
+# 回复：图片模式已开启
+
+/tp
+# 回复：图片模式已关闭
+```
+
+## 依赖
+
+- Python 3.7+
+- aiohttp
+
+## 许可证
+
+[MIT](LICENSE)
+
+## 作者
+
+浅月tniay
+
+## 版本
+
+1.0.0
