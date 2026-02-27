@@ -1,28 +1,76 @@
 from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
-from astrbot.api.star import Context, Star, register
+from astrbot.api.star import Context, Star, StarTools
 from astrbot.api import logger
-import aiohttp
+
 import urllib.parse
 
-@register("upload_text_to_image", "浅月tniay", "使bot以图片形式返回内容，将文本以图片的形式发送", "1.0.0")
 class MyPlugin(Star):
     def __init__(self, context: Context, config=None):
         super().__init__(context)
-        self.image_mode = False  # 默认为关闭图片模式
         # API配置
         self.api_url = "https://api.suyanw.cn/api/zdytwhc.php"
-        self.image_url = "https://api.suyanw.cn/api/comic.php"  # 默认值
         self.text_size = 85
         
-        # 从配置中读取image_url
+        # 加载持久化数据
+        self.data_file = self._get_data_file()
+        self._load_data()
+        
+        # 从配置中读取image_url（如果配置存在且未从持久化数据加载）
         try:
-            if config and "image_url" in config:
+            if config and "image_url" in config and not hasattr(self, 'image_url'):
                 self.image_url = config["image_url"]
                 logger.info(f"从配置中读取图片模板地址：{self.image_url}")
         except Exception as e:
             logger.error(f"读取配置失败：{e}")
         
+        # 设置默认值（如果未从持久化数据或配置中加载）
+        if not hasattr(self, 'image_mode'):
+            self.image_mode = False  # 默认为关闭图片模式
+        if not hasattr(self, 'image_url'):
+            self.image_url = "https://api.suyanw.cn/api/comic.php"  # 默认值
+        
         logger.info(f"文本转图片插件初始化，当前图片模式：{self.image_mode}")
+        logger.info(f"当前图片模板地址：{self.image_url}")
+    
+    def _get_data_file(self):
+        """获取数据文件路径"""
+        data_dir = StarTools.get_data_dir(self)
+        import os
+        return os.path.join(data_dir, "image_config.json")
+    
+    def _load_data(self):
+        """加载持久化数据"""
+        try:
+            import json
+            import os
+            if os.path.exists(self.data_file):
+                with open(self.data_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if 'image_mode' in data:
+                        self.image_mode = data['image_mode']
+                    if 'image_url' in data:
+                        self.image_url = data['image_url']
+                logger.info("已从持久化数据加载配置")
+        except Exception as e:
+            logger.error(f"加载持久化数据失败：{e}")
+    
+    def _save_data(self):
+        """保存持久化数据"""
+        try:
+            import json
+            import os
+            # 确保数据目录存在
+            os.makedirs(os.path.dirname(self.data_file), exist_ok=True)
+            # 保存数据
+            data = {
+                'image_mode': self.image_mode,
+                'image_url': self.image_url
+            }
+            with open(self.data_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            logger.info("配置已持久化保存")
+        except Exception as e:
+            logger.error(f"保存持久化数据失败：{e}")
 
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
@@ -34,15 +82,13 @@ class MyPlugin(Star):
         """将文本转换为图片并发送"""
         message_str = event.message_str # 用户发的纯文本消息字符串
         logger.info(f"收到/p指令，message_str: '{message_str}'")
-        if not message_str:
-            async for result in self.send_message(event, "请输入要转换为图片的文本，例如：/p 你好世界"):
-                yield result
-            return
         
-        # 去除"p"字符和空格，只保留用户输入的文本内容
+        # 提取命令参数，去除命令前缀
         user_text = message_str.strip()
+        # 简单处理：如果以'p '开头则移除，否则直接使用（适用于框架自动处理命令前缀的情况）
         if user_text.startswith('p '):
             user_text = user_text[2:].strip()
+        
         logger.info(f"处理后的文本: '{user_text}'")
         
         if not user_text:
@@ -52,16 +98,17 @@ class MyPlugin(Star):
         
         try:
             # 构建API请求URL
-            text = urllib.parse.quote(user_text)
-            api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image={self.image_url}&size=85&text={text}&color=true"
+            params = {
+                'image': self.image_url,
+                'size': 85,
+                'text': user_text,
+                'color': 'true'
+            }
+            query_string = urllib.parse.urlencode(params)
+            api_url = f"https://api.suyanw.cn/api/zdytwhc.php?{query_string}"
             
             # 直接发送API URL作为图片
-            try:
-                yield event.image_result(api_url)
-            except Exception as e:
-                logger.error(f"发送图片消息时出错：{e}")
-                async for result in self.send_message(event, f"发送图片失败：{str(e)}"):
-                    yield result
+            yield event.image_result(api_url)
         except Exception as e:
             logger.error(f"生成图片时出错：{e}")
             async for result in self.send_message(event, f"生成图片时出错：{str(e)}"):
@@ -75,6 +122,8 @@ class MyPlugin(Star):
         self.image_mode = not self.image_mode
         status = "开启" if self.image_mode else "关闭"
         logger.info(f"图片模式已{status}，当前状态：{self.image_mode}")
+        # 保存数据
+        self._save_data()
         # 发送状态消息，会根据当前图片模式决定是发送图片还是文字
         async for result in self.send_message(event, f"图片模式已{status}。\n开启后，bot返回的所有内容都会自动转换为图片形式。"):
             yield result
@@ -94,6 +143,8 @@ class MyPlugin(Star):
             # 更新图片模板地址
             self.image_url = message_str
             logger.info(f"图片模板地址已设置为：{self.image_url}")
+            # 保存数据
+            self._save_data()
             # 发送状态消息
             async for result in self.send_message(event, f"图片模板地址已设置为：{self.image_url}"):
                 yield result
@@ -110,20 +161,18 @@ class MyPlugin(Star):
         if self.image_mode:
             try:
                 # 构建API请求URL
-                text_encoded = urllib.parse.quote(text)
-                api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image={self.image_url}&size=85&text={text_encoded}&color=true"
+                params = {
+                    'image': self.image_url,
+                    'size': 85,
+                    'text': text,
+                    'color': 'true'
+                }
+                query_string = urllib.parse.urlencode(params)
+                api_url = f"https://api.suyanw.cn/api/zdytwhc.php?{query_string}"
                 logger.info(f"构建图片API URL：{api_url}")
                 
                 # 直接发送API URL作为图片
-                try:
-                    logger.info("尝试发送图片消息")
-                    yield event.image_result(api_url)
-                    logger.info("图片消息发送成功")
-                except Exception as e:
-                    logger.error(f"发送图片消息时出错：{e}")
-                    # 出错时发送纯文本
-                    logger.info("图片发送失败，回退到纯文本")
-                    yield event.plain_result(text)
+                yield event.image_result(api_url)
             except Exception as e:
                 logger.error(f"生成图片时出错：{e}")
                 # 出错时发送纯文本
@@ -145,20 +194,34 @@ class MyPlugin(Star):
                     # 检查消息链中是否有文本消息
                     has_text = False
                     text_content = ""
+                    non_text_components = []
+                    
                     for component in result.chain:
                         if hasattr(component, 'text'):
                             has_text = True
                             text_content += component.text
+                        else:
+                            # 保留非文本组件
+                            non_text_components.append(component)
                     
                     if has_text:
                         # 构建API请求URL
-                        text_encoded = urllib.parse.quote(text_content)
-                        api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image={self.image_url}&size=85&text={text_encoded}&color=true"
+                        params = {
+                            'image': self.image_url,
+                            'size': 85,
+                            'text': text_content,
+                            'color': 'true'
+                        }
+                        query_string = urllib.parse.urlencode(params)
+                        api_url = f"https://api.suyanw.cn/api/zdytwhc.php?{query_string}"
                         logger.info(f"将文本转换为图片：{text_content[:50]}...")
                         
-                        # 直接使用event.image_result创建图片消息
-                        # 注意：这里我们需要使用event.image_result的返回值
+                        # 创建新的消息链，包含非文本组件和图片
+                        # 首先创建图片结果
                         image_result = event.image_result(api_url)
+                        # 将非文本组件添加到新的消息链中
+                        for component in non_text_components:
+                            image_result.chain.append(component)
                         # 设置新的结果
                         event.set_result(image_result)
             except Exception as e:
