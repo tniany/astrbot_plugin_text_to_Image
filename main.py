@@ -23,7 +23,7 @@ class MyPlugin(Star):
                     logger.info(f"从配置中读取图片模板地址：{self.image_url}")
                 if "color_enabled" in config and not hasattr(self, 'color_enabled'):
                     self.color_enabled = config["color_enabled"]
-                    logger.info(f"从配置中读取颜色开关状态：{self.color_enabled}")
+                    logger.info(f"从配置中读取文本多颜色状态：{self.color_enabled}")
         except Exception as e:
             logger.error(f"读取配置失败：{e}")
         
@@ -33,9 +33,9 @@ class MyPlugin(Star):
         if not hasattr(self, 'image_url'):
             self.image_url = "https://api.suyanw.cn/api/comic.php"  # 默认值
         if not hasattr(self, 'color_enabled'):
-            self.color_enabled = True  # 默认为开启颜色
+            self.color_enabled = True  # 默认为开启文本多颜色
         
-        logger.info(f"文本转图片插件初始化，当前图片模式：{self.image_mode}，颜色状态：{self.color_enabled}")
+        logger.info(f"文本转图片插件初始化，当前图片模式：{self.image_mode}，文本多颜色状态：{self.color_enabled}")
         logger.info(f"当前图片模板地址：{self.image_url}")
     
     def _get_data_file(self):
@@ -167,14 +167,14 @@ class MyPlugin(Star):
     @filter.permission_type(filter.PermissionType.ADMIN)
     @filter.command("cf")
     async def toggle_color(self, event: AstrMessageEvent):
-        """切换颜色状态"""
+        """切换文本多颜色状态"""
         self.color_enabled = not self.color_enabled
         status = "开启" if self.color_enabled else "关闭"
-        logger.info(f"颜色状态已{status}，当前状态：{self.color_enabled}")
+        logger.info(f"文本多颜色状态已{status}，当前状态：{self.color_enabled}")
         # 保存数据
         self._save_data()
         # 发送状态消息
-        async for result in self.send_message(event, f"颜色状态已{status}。\n{status}后，生成的图片将{'包含' if self.color_enabled else '不包含'}颜色。"):
+        async for result in self.send_message(event, f"文本多颜色状态已{status}。\n{status}后，生成的图片将{'包含多种颜色' if self.color_enabled else '不包含颜色'}。"):
             yield result
 
 
