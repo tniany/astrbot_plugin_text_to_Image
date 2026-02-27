@@ -31,8 +31,9 @@ class MyPlugin(Star):
     # 注册指令的装饰器。指令名为 p。注册成功后，发送 `/p 文本` 就会触发这个指令，并将文本转换为图片返回
     @filter.command("p")
     async def text_to_image(self, event: AstrMessageEvent):
-        """将文本转换为图片并发送""" # 这是 handler 的描述，将会被解析方便用户了解插件内容。建议填写。
+        """将文本转换为图片并发送"""
         message_str = event.message_str # 用户发的纯文本消息字符串
+        logger.info(f"收到/p指令，message_str: '{message_str}'")
         if not message_str:
             async for result in self.send_message(event, "请输入要转换为图片的文本，例如：/p 你好世界"):
                 yield result
