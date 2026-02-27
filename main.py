@@ -34,7 +34,8 @@ class MyPlugin(Star):
     
     def _get_data_file(self):
         """获取数据文件路径"""
-        data_dir = StarTools.get_data_dir(self)
+        # 使用插件名称作为参数获取数据目录
+        data_dir = StarTools.get_data_dir("upload_text_to_image")
         import os
         return os.path.join(data_dir, "image_config.json")
     
