@@ -9,9 +9,14 @@ class MyPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
         self.image_mode = False  # 默认为关闭图片模式
+        # API配置
+        self.api_url = "https://api.suyanw.cn/api/zdytwhc.php"
+        self.image_url = "https://api.suyanw.cn/api/comic.php"
+        self.text_size = 85
 
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
+        logger.info("文本转图片插件初始化成功")
 
     # 注册指令的装饰器。指令名为 p。注册成功后，发送 `/p 文本` 就会触发这个指令，并将文本转换为图片返回
     @filter.command("p")
@@ -32,8 +37,15 @@ class MyPlugin(Star):
             async with aiohttp.ClientSession() as session:
                 async with session.get(api_url) as response:
                     if response.status == 200:
-                        # 发送图片消息
-                        yield event.image_result(await response.read())
+                        # 获取响应内容
+                        image_data = await response.read()
+                        # 检查响应内容是否为字节对象
+                        if isinstance(image_data, bytes):
+                            # 发送图片消息
+                            yield event.image_result(image_data)
+                        else:
+                            async for result in self.send_message(event, "生成图片失败，返回内容不是有效的图片数据"):
+                                yield result
                     else:
                         async for result in self.send_message(event, f"生成图片失败，错误码：{response.status}"):
                             yield result
@@ -48,20 +60,20 @@ class MyPlugin(Star):
         """切换图片模式，开启后bot返回的内容全部使用图片形式返回"""
         self.image_mode = not self.image_mode
         status = "开启" if self.image_mode else "关闭"
+        logger.info(f"图片模式已{status}")
         async for result in self.send_message(event, f"图片模式已{status}"):
             yield result
 
-    # 注意：由于AstrBot的filter模块中没有message属性，暂时注释掉此功能
     # 监听所有消息，当图片模式开启时，将所有返回的内容转换为图片
-    # @filter.message()
-    # async def handle_all_messages(self, event: AstrMessageEvent):
-    #     """处理所有消息，当图片模式开启时，将返回内容转换为图片"""
-    #     # 跳过指令消息，避免循环处理
-    #     if event.message_str.startswith("/"):
-    #         return
-    #     
-    #     # 这里可以添加对其他插件返回内容的处理逻辑
-    #     # 但由于插件系统的限制，可能需要更复杂的实现
+    @filter.message()
+    async def handle_all_messages(self, event: AstrMessageEvent):
+        """处理所有消息，当图片模式开启时，将返回内容转换为图片"""
+        # 跳过指令消息，避免循环处理
+        if event.message_str.startswith("/"):
+            return
+        
+        # 这里可以添加对其他插件返回内容的处理逻辑
+        # 但由于插件系统的限制，可能需要更复杂的实现
 
     async def send_message(self, event: AstrMessageEvent, text: str):
         """发送消息，当图片模式开启时，将文本转换为图片发送"""
@@ -75,8 +87,15 @@ class MyPlugin(Star):
                 async with aiohttp.ClientSession() as session:
                     async with session.get(api_url) as response:
                         if response.status == 200:
-                            # 发送图片消息
-                            yield event.image_result(await response.read())
+                            # 获取响应内容
+                            image_data = await response.read()
+                            # 检查响应内容是否为图片（简单检查是否为字节对象）
+                            if isinstance(image_data, bytes):
+                                # 发送图片消息
+                                yield event.image_result(image_data)
+                            else:
+                                # 失败时发送纯文本
+                                yield event.plain_result(text)
                         else:
                             # 失败时发送纯文本
                             yield event.plain_result(text)
@@ -90,3 +109,4 @@ class MyPlugin(Star):
 
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
+        logger.info("文本转图片插件已卸载")
