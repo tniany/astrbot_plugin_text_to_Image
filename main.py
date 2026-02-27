@@ -11,20 +11,21 @@ class MyPlugin(Star):
         self.image_mode = False  # 默认为关闭图片模式
         # API配置
         self.api_url = "https://api.suyanw.cn/api/zdytwhc.php"
-        self.image_url = "https://api.suyanw.cn/api/comic.php"
+        self.image_url = "https://api.suyanw.cn/api/comic.php"  # 默认值
         self.text_size = 85
         logger.info(f"文本转图片插件初始化，当前图片模式：{self.image_mode}")
 
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
-        logger.info("文本转图片插件初始化成功")
-        # 尝试注册事件处理器
+        # 从配置中读取image_url
         try:
-            # 注意：这里的事件注册方式可能需要根据AstrBot的实际API进行调整
-            # 以下代码仅作为示例
-            logger.info("尝试注册事件处理器")
+            config = self.context.get_plugin_config()
+            if config and "image_url" in config:
+                self.image_url = config["image_url"]
+                logger.info(f"从配置中读取图片模板地址：{self.image_url}")
         except Exception as e:
-            logger.error(f"注册事件处理器失败：{e}")
+            logger.error(f"读取配置失败：{e}")
+        logger.info("文本转图片插件初始化成功")
 
     # 注册指令的装饰器。指令名为 p。注册成功后，发送 `/p 文本` 就会触发这个指令，并将文本转换为图片返回
     @filter.command("p")
@@ -39,7 +40,7 @@ class MyPlugin(Star):
         try:
             # 构建API请求URL
             text = urllib.parse.quote(message_str)
-            api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image=https://api.suyanw.cn/api/comic.php&size=85&text={text}&color=true"
+            api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image={self.image_url}&size=85&text={text}&color=true"
             
             # 直接发送API URL作为图片
             try:
@@ -65,6 +66,29 @@ class MyPlugin(Star):
         async for result in self.send_message(event, f"图片模式已{status}。\n开启后，bot返回的所有内容都会自动转换为图片形式。"):
             yield result
 
+    # 注册指令的装饰器。指令名为 z。注册成功后，发送 `/z 图片地址` 就会触发这个指令，设置图片模板地址
+    @filter.permission_type(filter.PermissionType.ADMIN)
+    @filter.command("z")
+    async def set_image_url(self, event: AstrMessageEvent):
+        """设置图片模板地址"""
+        message_str = event.message_str # 用户发的纯文本消息字符串
+        if not message_str:
+            async for result in self.send_message(event, "请输入要设置的图片模板地址，例如：/z https://example.com/image.png"):
+                yield result
+            return
+        
+        try:
+            # 更新图片模板地址
+            self.image_url = message_str
+            logger.info(f"图片模板地址已设置为：{self.image_url}")
+            # 发送状态消息
+            async for result in self.send_message(event, f"图片模板地址已设置为：{self.image_url}"):
+                yield result
+        except Exception as e:
+            logger.error(f"设置图片模板地址时出错：{e}")
+            async for result in self.send_message(event, f"设置图片模板地址时出错：{str(e)}"):
+                yield result
+
 
 
     async def send_message(self, event: AstrMessageEvent, text: str):
@@ -74,7 +98,7 @@ class MyPlugin(Star):
             try:
                 # 构建API请求URL
                 text_encoded = urllib.parse.quote(text)
-                api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image=https://api.suyanw.cn/api/comic.php&size=85&text={text_encoded}&color=true"
+                api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image={self.image_url}&size=85&text={text_encoded}&color=true"
                 logger.info(f"构建图片API URL：{api_url}")
                 
                 # 直接发送API URL作为图片
@@ -116,7 +140,7 @@ class MyPlugin(Star):
                     if has_text:
                         # 构建API请求URL
                         text_encoded = urllib.parse.quote(text_content)
-                        api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image=https://api.suyanw.cn/api/comic.php&size=85&text={text_encoded}&color=true"
+                        api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image={self.image_url}&size=85&text={text_encoded}&color=true"
                         logger.info(f"将文本转换为图片：{text_content[:50]}...")
                         
                         # 直接使用event.image_result创建图片消息
