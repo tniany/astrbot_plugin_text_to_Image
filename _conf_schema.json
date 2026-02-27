@@ -1,0 +1,8 @@
+{
+  "image_url": {
+    "description": "图片模板地址",
+    "type": "string",
+    "default": "https://api.suyanw.cn/api/comic.php",
+    "hint": "用于生成图片的模板地址，默认使用二次元风格模板"
+  }
+}
