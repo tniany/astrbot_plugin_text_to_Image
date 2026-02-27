@@ -20,7 +20,7 @@ class MyPlugin(Star):
 
     # 注册指令的装饰器。指令名为 p。注册成功后，发送 `/p 文本` 就会触发这个指令，并将文本转换为图片返回
     @filter.command("p")
-    async def text_to_image(self, event: AstrMessageEvent, *args):
+    async def text_to_image(self, event: AstrMessageEvent):
         """将文本转换为图片并发送""" # 这是 handler 的描述，将会被解析方便用户了解插件内容。建议填写。
         message_str = event.message_str # 用户发的纯文本消息字符串
         if not message_str:
@@ -61,7 +61,7 @@ class MyPlugin(Star):
 
     # 注册指令的装饰器。指令名为 tp。注册成功后，发送 `/tp` 就会触发这个指令，切换图片模式
     @filter.command("tp")
-    async def toggle_image_mode(self, event: AstrMessageEvent, *args):
+    async def toggle_image_mode(self, event: AstrMessageEvent):
         """切换图片模式，开启后bot返回的内容全部使用图片形式返回"""
         self.image_mode = not self.image_mode
         status = "开启" if self.image_mode else "关闭"
