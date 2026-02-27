@@ -1,6 +1,32 @@
-![22b67333e601142991cc8a557a83ffc0_720](https://github.com/user-attachments/assets/5babfe32-fcd8-4a52-b4c9-4167b13eac43)# plugin_upload_text_to_Image 插件
+# plugin_upload_text_to_Image 插件
 
-AstrBot 插件，使bot以图片形式返回内容，将文本以图片的形式发送。基于外部API的二次元风格文转图，提供更美观的文本展示效果。
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/0369dd64-e7a2-494d-943a-14eb9e0e83f7" alt="效果展示" width="300" />
+  
+  <p>AstrBot 插件，使bot以图片形式返回内容，将文本以图片的形式发送。基于外部API的二次元风格文转图，提供更美观的文本展示效果。</p>
+  
+  <div>
+    <img src="https://img.shields.io/github/stars/tniany/plugin_upload_text_to_Image?style=flat-square" alt="GitHub Stars" />
+    <img src="https://img.shields.io/github/license/tniany/plugin_upload_text_to_Image?style=flat-square" alt="License" />
+    <img src="https://img.shields.io/badge/python-3.7%2B-blue?style=flat-square" alt="Python Version" />
+  </div>
+</div>
+
+## 目录
+
+- [功能介绍](#功能介绍)
+- [效果展示](#效果展示)
+- [技术实现](#技术实现)
+- [支持平台](#支持平台)
+- [安装方法](#安装方法)
+- [使用示例](#使用示例)
+- [依赖](#依赖)
+- [许可证](#许可证)
+- [作者](#作者)
+- [版本](#版本)
+- [更新日志](#更新日志)
+- [贡献指南](#贡献指南)
+- [仓库地址](#仓库地址)
 
 ## 功能介绍
 
@@ -80,6 +106,22 @@ AstrBot 插件，使bot以图片形式返回内容，将文本以图片的形式
 ## 版本
 
 v1.0.6
+
+## 更新日志
+
+### v1.0.6
+- 优化错误处理机制
+- 提升图片生成成功率
+
+### v1.0.5
+- 修复部分平台兼容性问题
+- 优化API调用逻辑
+
+### v1.0.0
+- 初始版本发布
+- 实现基本的文本转图片功能
+- 支持图片模式切换
+
 
 ## 仓库地址
 
