@@ -15,23 +15,22 @@ class MyPlugin(Star):
         import asyncio
         self._data_lock = asyncio.Lock()
         
-        # 加载持久化数据
+        # 获取数据文件路径
         self.data_file = self._get_data_file()
-        self._load_data()
         
-        # 从配置中读取配置项（如果配置存在且未从持久化数据加载）
+        # 从配置中读取配置项
         try:
             if config:
-                if "image_url" in config and not hasattr(self, 'image_url'):
+                if "image_url" in config:
                     self.image_url = config["image_url"]
                     logger.info(f"从配置中读取图片模板地址：{self.image_url}")
-                if "color_enabled" in config and not hasattr(self, 'color_enabled'):
+                if "color_enabled" in config:
                     self.color_enabled = config["color_enabled"]
                     logger.info(f"从配置中读取文本多颜色状态：{self.color_enabled}")
         except Exception as e:
             logger.error(f"读取配置失败：{e}")
         
-        # 设置默认值（如果未从持久化数据或配置中加载）
+        # 设置默认值
         if not hasattr(self, 'image_mode'):
             self.image_mode = False  # 默认为关闭图片模式
         if not hasattr(self, 'image_url'):
@@ -49,23 +48,24 @@ class MyPlugin(Star):
         import os
         return os.path.join(data_dir, "image_config.json")
     
-    def _load_data(self):
+    async def _load_data(self):
         """加载持久化数据"""
-        try:
-            import json
-            import os
-            if os.path.exists(self.data_file):
-                with open(self.data_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    if 'image_mode' in data:
-                        self.image_mode = data['image_mode']
-                    if 'image_url' in data:
-                        self.image_url = data['image_url']
-                    if 'color_enabled' in data:
-                        self.color_enabled = data['color_enabled']
-                logger.info("已从持久化数据加载配置")
-        except Exception as e:
-            logger.error(f"加载持久化数据失败：{e}")
+        async with self._data_lock:
+            try:
+                import json
+                import os
+                if os.path.exists(self.data_file):
+                    with open(self.data_file, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        if 'image_mode' in data:
+                            self.image_mode = data['image_mode']
+                        if 'image_url' in data:
+                            self.image_url = data['image_url']
+                        if 'color_enabled' in data:
+                            self.color_enabled = data['color_enabled']
+                    logger.info("已从持久化数据加载配置")
+            except Exception as e:
+                logger.error(f"加载持久化数据失败：{e}")
     
     async def _save_data(self):
         """保存持久化数据"""
@@ -89,6 +89,8 @@ class MyPlugin(Star):
 
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
+        # 加载持久化数据
+        await self._load_data()
         logger.info("文本转图片插件初始化成功")
 
     # 注册指令的装饰器。指令名为 p。注册成功后，发送 `/p 文本` 就会触发这个指令，并将文本转换为图片返回
@@ -99,12 +101,20 @@ class MyPlugin(Star):
         logger.info(f"收到/p指令，message_str: '{message_str}'")
         
         # 提取命令参数，去除命令前缀
+        if message_str is None:
+            async for result in self.send_message(event, "请输入要转换为图片的文本，例如：/p 你好世界"):
+                yield result
+            return
+        
         user_text = message_str.strip()
         # 处理两种前缀格式："/p " 和 "p "
         if user_text.startswith('/p '):
             user_text = user_text[3:].strip()
         elif user_text.startswith('p '):
             user_text = user_text[2:].strip()
+        # 处理仅命令无参数的场景
+        elif user_text == '/p' or user_text == 'p':
+            user_text = ""
         
         logger.info(f"处理后的文本: '{user_text}'")
         
@@ -158,7 +168,7 @@ class MyPlugin(Star):
     async def set_image_url(self, event: AstrMessageEvent):
         """设置图片模板地址"""
         message_str = event.message_str # 用户发的纯文本消息字符串
-        if not message_str:
+        if message_str is None:
             async for result in self.send_message(event, "请输入要设置的图片模板地址，例如：/z https://example.com/image.png"):
                 yield result
             return
@@ -171,6 +181,9 @@ class MyPlugin(Star):
                 image_url = image_url[3:].strip()
             elif image_url.startswith('z '):
                 image_url = image_url[2:].strip()
+            # 处理仅命令无参数的场景
+            elif image_url == '/z' or image_url == 'z':
+                image_url = ""
             
             # 验证 URL 合法性
             if not image_url:
@@ -254,7 +267,8 @@ class MyPlugin(Star):
                     text_components = []
                     
                     for component in result.chain:
-                        if hasattr(component, 'text'):
+                        # 更精确的文本组件判断
+                        if hasattr(component, 'text') and isinstance(component.text, str):
                             has_text = True
                             text_components.append(component.text)
                     
@@ -270,11 +284,19 @@ class MyPlugin(Star):
                         }
                         query_string = urllib.parse.urlencode(params)
                         api_url = f"{self.api_url}?{query_string}"
+                        
+                        # 检查最终 URL 长度
+                        MAX_URL_LENGTH = 2048
+                        if len(api_url) > MAX_URL_LENGTH:
+                            logger.warning(f"生成的图片 URL 过长：{len(api_url)} 字符，可能导致发送失败")
+                            # 不转换为图片，保持原样
+                            return
+                        
                         logger.info(f"将文本转换为图片：{text_content[:50]}...")
                         
-                        # 创建新的消息链，保持原顺序
-                        # 首先创建一个新的结果
-                        new_result = event.image_result(api_url)
+                        # 创建新的消息链，按原顺序重建
+                        # 首先创建一个纯文本结果作为基础
+                        new_result = event.plain_result("")
                         # 清空链，准备按原顺序重建
                         new_result.chain = []
                         
@@ -283,10 +305,13 @@ class MyPlugin(Star):
                         
                         # 遍历原始链，保持顺序
                         for component in result.chain:
-                            if hasattr(component, 'text'):
+                            # 更精确的文本组件判断
+                            if hasattr(component, 'text') and isinstance(component.text, str):
                                 # 文本组件：只添加一次图片
                                 if not image_added:
-                                    # 图片已经在 new_result 中，不需要再添加
+                                    # 创建图片组件并添加到链中
+                                    image_component = event.image_result(api_url).chain[0]
+                                    new_result.chain.append(image_component)
                                     image_added = True
                             else:
                                 # 非文本组件：保持原位置
