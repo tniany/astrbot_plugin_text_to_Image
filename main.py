@@ -120,9 +120,14 @@ class MyPlugin(Star):
                         
                         # 清空原消息链
                         result.chain.clear()
-                        # 添加图片消息
-                        from astrbot.api.message_components import Image
-                        result.chain.append(Image(url=api_url))
+                        # 尝试使用正确的参数创建Image对象
+                        try:
+                            from astrbot.api.message_components import Image
+                            # 尝试使用file参数，传递API URL作为值
+                            result.chain.append(Image(file=api_url))
+                        except Exception as e:
+                            logger.error(f"添加图片消息失败：{e}")
+                            # 出错时保持原消息不变
             except Exception as e:
                 logger.error(f"装饰消息时出错：{e}")
 
