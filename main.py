@@ -6,25 +6,26 @@ import urllib.parse
 
 @register("upload_text_to_image", "浅月tniay", "使bot以图片形式返回内容，将文本以图片的形式发送", "1.0.0")
 class MyPlugin(Star):
-    def __init__(self, context: Context):
+    def __init__(self, context: Context, config=None):
         super().__init__(context)
         self.image_mode = False  # 默认为关闭图片模式
         # API配置
         self.api_url = "https://api.suyanw.cn/api/zdytwhc.php"
         self.image_url = "https://api.suyanw.cn/api/comic.php"  # 默认值
         self.text_size = 85
-        logger.info(f"文本转图片插件初始化，当前图片模式：{self.image_mode}")
-
-    async def initialize(self):
-        """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
+        
         # 从配置中读取image_url
         try:
-            config = self.context.get_plugin_config()
             if config and "image_url" in config:
                 self.image_url = config["image_url"]
                 logger.info(f"从配置中读取图片模板地址：{self.image_url}")
         except Exception as e:
             logger.error(f"读取配置失败：{e}")
+        
+        logger.info(f"文本转图片插件初始化，当前图片模式：{self.image_mode}")
+
+    async def initialize(self):
+        """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
         logger.info("文本转图片插件初始化成功")
 
     # 注册指令的装饰器。指令名为 p。注册成功后，发送 `/p 文本` 就会触发这个指令，并将文本转换为图片返回
