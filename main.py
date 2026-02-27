@@ -33,27 +33,13 @@ class MyPlugin(Star):
             text = urllib.parse.quote(message_str)
             api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image=https://api.suyanw.cn/api/comic.php&size=85&text={text}&color=true"
             
-            # 发送HTTP请求获取图片
-            async with aiohttp.ClientSession() as session:
-                async with session.get(api_url) as response:
-                    if response.status == 200:
-                        # 获取响应内容
-                        image_data = await response.read()
-                        # 检查响应内容是否为字节对象
-                        if isinstance(image_data, bytes):
-                            try:
-                                # 发送图片消息
-                                yield event.image_result(image_data)
-                            except Exception as e:
-                                logger.error(f"发送图片消息时出错：{e}")
-                                async for result in self.send_message(event, f"发送图片失败：{str(e)}"):
-                                    yield result
-                        else:
-                            async for result in self.send_message(event, "生成图片失败，返回内容不是有效的图片数据"):
-                                yield result
-                    else:
-                        async for result in self.send_message(event, f"生成图片失败，错误码：{response.status}"):
-                            yield result
+            # 直接发送API URL作为图片
+            try:
+                yield event.image_result(api_url)
+            except Exception as e:
+                logger.error(f"发送图片消息时出错：{e}")
+                async for result in self.send_message(event, f"发送图片失败：{str(e)}"):
+                    yield result
         except Exception as e:
             logger.error(f"生成图片时出错：{e}")
             async for result in self.send_message(event, f"生成图片时出错：{str(e)}"):
@@ -79,27 +65,13 @@ class MyPlugin(Star):
                 text_encoded = urllib.parse.quote(text)
                 api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image=https://api.suyanw.cn/api/comic.php&size=85&text={text_encoded}&color=true"
                 
-                # 发送HTTP请求获取图片
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(api_url) as response:
-                        if response.status == 200:
-                            # 获取响应内容
-                            image_data = await response.read()
-                            # 检查响应内容是否为字节对象
-                            if isinstance(image_data, bytes):
-                                try:
-                                    # 发送图片消息
-                                    yield event.image_result(image_data)
-                                except Exception as e:
-                                    logger.error(f"发送图片消息时出错：{e}")
-                                    # 出错时发送纯文本
-                                    yield event.plain_result(text)
-                            else:
-                                # 失败时发送纯文本
-                                yield event.plain_result(text)
-                        else:
-                            # 失败时发送纯文本
-                            yield event.plain_result(text)
+                # 直接发送API URL作为图片
+                try:
+                    yield event.image_result(api_url)
+                except Exception as e:
+                    logger.error(f"发送图片消息时出错：{e}")
+                    # 出错时发送纯文本
+                    yield event.plain_result(text)
             except Exception as e:
                 logger.error(f"生成图片时出错：{e}")
                 # 出错时发送纯文本
