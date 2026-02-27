@@ -39,9 +39,20 @@ class MyPlugin(Star):
                 yield result
             return
         
+        # 去除"p"字符和空格，只保留用户输入的文本内容
+        user_text = message_str.strip()
+        if user_text.startswith('p '):
+            user_text = user_text[2:].strip()
+        logger.info(f"处理后的文本: '{user_text}'")
+        
+        if not user_text:
+            async for result in self.send_message(event, "请输入要转换为图片的文本，例如：/p 你好世界"):
+                yield result
+            return
+        
         try:
             # 构建API请求URL
-            text = urllib.parse.quote(message_str)
+            text = urllib.parse.quote(user_text)
             api_url = f"https://api.suyanw.cn/api/zdytwhc.php?image={self.image_url}&size=85&text={text}&color=true"
             
             # 直接发送API URL作为图片

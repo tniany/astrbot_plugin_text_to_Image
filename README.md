@@ -1,8 +1,9 @@
-# plugin_upload_text_to_Image 插件
+# plugin_upload_text_to_Image
+ 二次元风格-文本转图片
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/4d1de02f-7347-4b2f-b81d-c2d3cfd84b87" alt="logo" width="300" />
-  <p>AstrBot 插件，使bot以图片形式返回内容，将文本以图片的形式发送。基于外部API的二次元风格文转图，提供更美观的文本展示效果。</p>
+  <p>AstrBot 插件，二次元风格文转图，使bot以图片形式返回内容，将文本以图片的形式发送。基于外部API的二次元风格文转图，提供更美观的文本展示效果。</p>
   
   <div>
     <img src="https://img.shields.io/github/stars/tniany/plugin_upload_text_to_Image?style=flat-square" alt="GitHub Stars" />
@@ -11,21 +12,6 @@
   </div>
 </div>
 
-## 目录
-
-- [功能介绍](#功能介绍)
-- [效果展示](#效果展示)
-- [技术实现](#技术实现)
-- [支持平台](#支持平台)
-- [安装方法](#安装方法)
-- [使用示例](#使用示例)
-- [依赖](#依赖)
-- [许可证](#许可证)
-- [作者](#作者)
-- [版本](#版本)
-- [更新日志](#更新日志)
-- [贡献指南](#贡献指南)
-- [仓库地址](#仓库地址)
 
 ## 功能介绍
 
@@ -46,19 +32,12 @@
 - 支持文本URL编码和完整的错误处理机制
 - 兼容多种聊天平台
 
-## 支持平台
-
-- QQ
-- Telegram
-- 飞书
-- 钉钉
-- Slack
-- Line
-- Discord
-- Matrix
-
 ## 安装方法
 
+### 方法一：插件市场安装（推荐）
+在 AstrBot 插件市场中搜索 **二次元风格-文本转图片**，点击下载安装即可。
+
+### 方法二：手动安装
 1. 克隆或下载本插件到 AstrBot 的插件目录
    ```bash
    git clone https://github.com/tniany/plugin_upload_text_to_Image.git
