@@ -41,8 +41,13 @@ class MyPlugin(Star):
                         image_data = await response.read()
                         # 检查响应内容是否为字节对象
                         if isinstance(image_data, bytes):
-                            # 发送图片消息
-                            yield event.image_result(image_data)
+                            try:
+                                # 发送图片消息
+                                yield event.image_result(image_data)
+                            except Exception as e:
+                                logger.error(f"发送图片消息时出错：{e}")
+                                async for result in self.send_message(event, f"发送图片失败：{str(e)}"):
+                                    yield result
                         else:
                             async for result in self.send_message(event, "生成图片失败，返回内容不是有效的图片数据"):
                                 yield result
@@ -80,10 +85,15 @@ class MyPlugin(Star):
                         if response.status == 200:
                             # 获取响应内容
                             image_data = await response.read()
-                            # 检查响应内容是否为图片（简单检查是否为字节对象）
+                            # 检查响应内容是否为字节对象
                             if isinstance(image_data, bytes):
-                                # 发送图片消息
-                                yield event.image_result(image_data)
+                                try:
+                                    # 发送图片消息
+                                    yield event.image_result(image_data)
+                                except Exception as e:
+                                    logger.error(f"发送图片消息时出错：{e}")
+                                    # 出错时发送纯文本
+                                    yield event.plain_result(text)
                             else:
                                 # 失败时发送纯文本
                                 yield event.plain_result(text)
