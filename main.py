@@ -174,7 +174,7 @@ class MyPlugin(Star):
         # 保存数据
         self._save_data()
         # 发送状态消息
-        async for result in self.send_message(event, f"文本多颜色状态已{status}。\n{status}后，生成的图片将{'包含多种颜色' if self.color_enabled else '不包含颜色'}。"):
+        async for result in self.send_message(event, f"文本多颜色状态已{status}。\n{status}后，生成的图片将{'包含多种颜色' if self.color_enabled else '只有一种颜色'}。"):
             yield result
 
 
