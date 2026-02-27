@@ -64,16 +64,7 @@ class MyPlugin(Star):
         async for result in self.send_message(event, f"图片模式已{status}"):
             yield result
 
-    # 监听所有消息，当图片模式开启时，将所有返回的内容转换为图片
-    @filter.message()
-    async def handle_all_messages(self, event: AstrMessageEvent):
-        """处理所有消息，当图片模式开启时，将返回内容转换为图片"""
-        # 跳过指令消息，避免循环处理
-        if event.message_str.startswith("/"):
-            return
-        
-        # 这里可以添加对其他插件返回内容的处理逻辑
-        # 但由于插件系统的限制，可能需要更复杂的实现
+
 
     async def send_message(self, event: AstrMessageEvent, text: str):
         """发送消息，当图片模式开启时，将文本转换为图片发送"""
