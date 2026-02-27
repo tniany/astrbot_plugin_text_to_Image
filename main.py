@@ -303,22 +303,23 @@ class MyPlugin(Star):
                         # 标记是否已添加图片
                         image_added = False
                         
-                        # 遍历原始链，保持顺序
+                        # 遍历原始链，检查是否有文本组件
+                        has_text_component = False
                         for component in result.chain:
-                            # 更精确的文本组件判断
                             if hasattr(component, 'text') and isinstance(component.text, str):
-                                # 文本组件：只添加一次图片
-                                if not image_added:
-                                    # 创建图片组件并添加到链中
-                                    image_component = event.image_result(api_url).chain[0]
-                                    new_result.chain.append(image_component)
-                                    image_added = True
-                            else:
-                                # 非文本组件：保持原位置
-                                new_result.chain.append(component)
+                                has_text_component = True
+                                break
                         
-                        # 设置新的结果
-                        event.set_result(new_result)
+                        # 如果有文本组件，创建图片消息
+                        if has_text_component:
+                            # 直接使用 event.image_result 创建图片消息
+                            image_result = event.image_result(api_url)
+                            # 将非文本组件添加到图片结果的 chain 中
+                            for component in result.chain:
+                                if not (hasattr(component, 'text') and isinstance(component.text, str)):
+                                    image_result.chain.append(component)
+                            # 设置新的结果
+                            event.set_result(image_result)
             except Exception as e:
                 logger.error(f"装饰消息时出错：{e}")
 
