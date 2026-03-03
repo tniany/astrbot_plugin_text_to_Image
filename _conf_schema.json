@@ -13,7 +13,7 @@
   },
   "max_text_length": {
     "description": "文本字数上限",
-    "type": "number",
+    "type": "int",
     "default": 1000,
     "hint": "生成图片时的文本字数上限，超过此限制将拒绝生成图片"
   }
